@@ -9,13 +9,143 @@ public static class Program
 
 	public static void Main(string[] args)
 	{
-		//var testResult = Day4_Part1(false);
-		//Console.WriteLine($"Test Result: {testResult}");
+		var testResult = Day5_Part2(true);
+		Console.WriteLine($"Test Result: {testResult}");
 
-		var inputResult = Day4_Part2(false);
+		var inputResult = Day5_Part2(false);
 		Console.WriteLine($"InputResult: {inputResult}");
 
 		Console.ReadKey();
+	}
+
+	internal static int Day5_Part1(bool isTest = false)
+	{
+		using StreamReader sr = isTest
+			? new StreamReader("..\\..\\..\\Day5\\Test.txt")
+			: new StreamReader("..\\..\\..\\Day5\\Input.txt");
+
+		var freshRange = "";
+		List<Tuple<long, long>> freshRanges = new List<Tuple<long, long>>();
+		List<long> products = new List<long>();
+
+		do
+		{
+			freshRange = sr.ReadLine();
+
+			if(!string.IsNullOrEmpty(freshRange))
+				freshRanges.Add(new Tuple<long, long>(long.Parse(freshRange.Split('-')[0]), long.Parse(freshRange.Split('-')[1])));
+		}
+		while (freshRange != "");
+
+		while(!sr.EndOfStream)
+		{
+			var product = long.Parse(sr.ReadLine());
+			products.Add(product);
+		}
+
+		int totalCount = 0;
+
+		foreach (var product in products)
+		{
+			foreach (var range in freshRanges)
+			{
+				if(product >= range.Item1 && product <= range.Item2)
+				{
+					totalCount++;
+					break;
+				}
+			}
+		}
+		return totalCount; 
+	}
+
+	internal static long Day5_Part2(bool isTest = false)
+	{
+		using StreamReader sr = isTest
+			? new StreamReader("..\\..\\..\\Day5\\Test.txt")
+			: new StreamReader("..\\..\\..\\Day5\\Input.txt");
+
+		var freshRange = "";
+		List<Tuple<long, long>> freshRanges = new List<Tuple<long, long>>();
+		List<Tuple<long, long>> processedRanges = new List<Tuple<long, long>>();
+		long totalCount = 0;
+
+		do
+		{
+			freshRange = sr.ReadLine();
+
+			if (!string.IsNullOrEmpty(freshRange))
+				freshRanges.Add(new Tuple<long, long>(long.Parse(freshRange.Split('-')[0]), long.Parse(freshRange.Split('-')[1])));
+		}
+		while (freshRange != "");
+
+		foreach(var range in freshRanges)
+		{
+			var rangeToTheRight = processedRanges
+				.Where(r => r.Item1 >= range.Item1 && r.Item1 <= range.Item2)
+				.SingleOrDefault(new Tuple<long, long>(0, 0));
+
+			var rangeToTheLeft = processedRanges
+				.Where(r => r.Item2 >= range.Item1 && r.Item2 <= range.Item2)
+				.SingleOrDefault(new Tuple<long, long>(0, 0));
+
+			var itsInsideSomeRange = processedRanges
+				.Any(r => r.Item1 <= range.Item1 && r.Item2 >= range.Item2);
+
+			var outsideRange = processedRanges
+				.Where(r => r.Item1 > range.Item1 && r.Item2 < range.Item2)
+				.SingleOrDefault(new Tuple<long, long>(0, 0));
+
+			// Some range already contains all this IDs
+			if(itsInsideSomeRange)
+			{
+				continue;
+			}
+
+			// Some range is completelly inside this range
+			if(outsideRange.Item1 != 0)
+			{
+				processedRanges.Remove(outsideRange);
+			}
+
+			// Append only to the left
+			if (rangeToTheRight.Item1 != 0 && rangeToTheLeft.Item1 == 0)
+			{
+				processedRanges.Add(new Tuple<long, long>(range.Item1, Math.Max(rangeToTheRight.Item2, range.Item2)));
+				processedRanges.Remove(rangeToTheRight);
+				continue;
+			}
+
+			// Append only to the right
+			if(rangeToTheLeft.Item1 != 0 && rangeToTheRight.Item1 == 0)
+			{
+				processedRanges.Add(new Tuple<long, long>(Math.Min(rangeToTheLeft.Item1, range.Item1), range.Item2));
+				processedRanges.Remove(rangeToTheLeft);
+				continue;
+			}
+
+			//Append to the both sides
+			if ( rangeToTheRight.Item1 != 0 && rangeToTheLeft.Item1 != 0)
+			{
+				processedRanges.Add(new Tuple<long, long>(Math.Min(rangeToTheLeft.Item1, range.Item1), Math.Max(rangeToTheRight.Item2, range.Item2)));
+				processedRanges.Remove(rangeToTheRight);
+				processedRanges.Remove(rangeToTheLeft);
+				continue;
+			}
+
+			// Add new range
+			processedRanges.Add(new Tuple<long, long>(range.Item1, range.Item2));
+		}
+
+		foreach(var range in processedRanges)
+		{
+			totalCount += range.Item2 - range.Item1 + 1;
+		}
+
+		return totalCount;
+
+		// 318918704897454 - Too low
+		// 345995423801876 - Too high
 	}
 
 	internal static int Day4_Part1(bool isTest = false)
