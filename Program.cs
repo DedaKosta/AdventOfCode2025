@@ -9,13 +9,136 @@ public static class Program
 
 	public static void Main(string[] args)
 	{
-		var testResult = Day5_Part2(true);
-		Console.WriteLine($"Test Result: {testResult}");
+		//var testResult = Day6_Part2(true);
+		//Console.WriteLine($"Test Result: {testResult}");
 
-		var inputResult = Day5_Part2(false);
+		var inputResult = Day6_Part2(false);
 		Console.WriteLine($"InputResult: {inputResult}");
 
 		Console.ReadKey();
+	}
+
+	internal static long Day6_Part1(bool isTest = false)
+	{
+		using StreamReader sr = isTest
+			? new StreamReader("..\\..\\..\\Day6\\Test.txt")
+			: new StreamReader("..\\..\\..\\Day6\\Input.txt");
+
+		List<List<string>> input = new List<List<string>>();
+
+		while(!sr.EndOfStream)
+		{
+			var inputRow = sr.ReadLine()
+				.Split(' ')
+				.ToList();
+
+			inputRow.RemoveAll(r => string.IsNullOrWhiteSpace(r));
+
+			input.Add(inputRow);
+		}
+
+		List<string> signs = input.Last();
+		input.RemoveAt(input.Count - 1);
+
+		List<List<int>> numberRows = input
+			.Select(r => r.Select(n => int.Parse(n)).ToList())
+			.ToList();
+
+		long totalSum = 0;
+
+		for (int i = 0; i < signs.Count; i++)
+		{
+			switch (signs[i])
+			{
+				case "+":
+					long sum = 0;
+					numberRows.ForEach(r => sum += r[i]);
+
+					totalSum += sum;
+					break;
+
+				case "*":
+					long mul = 1;
+					numberRows.ForEach(r => mul *= r[i]);
+
+					totalSum += mul;
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		return totalSum;
+	}
+
+	internal static long Day6_Part2(bool isTest = false)
+	{
+		using StreamReader sr = isTest
+			? new StreamReader("..\\..\\..\\Day6\\Test.txt")
+			: new StreamReader("..\\..\\..\\Day6\\Input.txt");
+
+		List<List<char>> input = new List<List<char>>();
+
+		while (!sr.EndOfStream)
+		{
+			var inputRow = sr.ReadLine()
+				.ToCharArray()
+				.ToList();
+
+			input.Add(inputRow);
+		}
+
+		long totalSum = 0;
+
+		int columnIndex = 0;
+		int blockStart = 0;
+
+		while (columnIndex < input.First().Count)
+		{
+			columnIndex++;
+
+			if(columnIndex == input.First().Count || input.All(r => r[columnIndex] == ' '))
+			{
+				char sign = input.Last()[blockStart];
+
+				List<int> numbers = new List<int>();
+
+				for (int i = blockStart; i < columnIndex; i++)
+				{
+					string numberStr = "";
+					for (int j = 0; j < input.Count - 1; j++)
+					{
+						numberStr = string.Concat(numberStr, input[j][i] == ' ' ? string.Empty : input[j][i]);
+					}
+
+					numbers.Add(int.Parse(numberStr));
+				}
+
+				switch (sign)
+				{
+					case '+':
+						long sum = 0;
+						numbers.ForEach(r => sum += r);
+
+						totalSum += sum;
+						break;
+
+					case '*':
+						long mul = 1;
+						numbers.ForEach(r => mul *= r);
+
+						totalSum += mul;
+						break;
+
+					default:
+						break;
+				}
+
+				blockStart = columnIndex + 1;
+			}
+		}
+		return totalSum;
 	}
 
 	internal static int Day5_Part1(bool isTest = false)
@@ -143,9 +266,6 @@ public static class Program
 		}
 
 		return totalCount;
-
-		// 318918704897454 - Too low
-		// 345995423801876 - Too high
 	}
 
 	internal static int Day4_Part1(bool isTest = false)
